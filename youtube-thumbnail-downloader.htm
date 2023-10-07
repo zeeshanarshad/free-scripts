@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Thumbnail Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #preview {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>YouTube Thumbnail Downloader</h1>
+        <input type="text" id="urlInput" placeholder="Enter YouTube Playlist or Video URL">
+        <button onclick="showThumbnail()">Show Thumbnail</button>
+        <div id="preview"></div>
+    </div>
+
+    <script>
+        function showThumbnail() {
+            var url = document.getElementById("urlInput").value;
+            var videoId = extractVideoId(url);
+            if (videoId) {
+                var thumbnailUrl = `https://img.youtube.com/vi/${videoId}/0.jpg`;
+                var preview = document.getElementById("preview");
+                preview.innerHTML = `<img src="${thumbnailUrl}" alt="YouTube Thumbnail" style="width:100%;">`;
+            } else {
+                alert("Invalid YouTube URL. Please enter a valid playlist or video URL.");
+            }
+        }
+
+        function extractVideoId(url) {
+            var videoId = url.match(
+                /^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\/(watch|embed)?(\?v=|\/)?([a-zA-Z0-9_-]{11})/
+            );
+            return videoId ? videoId[7] : false;
+        }
+    </script>
+</body>
+
+</html>
