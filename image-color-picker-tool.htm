@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Image Color Picker Tool</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"> 
+ <style>
+    /* CSS styles for the color picker tool */
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+	#image-preview {
+	  max-width: 100%;
+	  max-height: 400px; /* Adjust the value as per your preference */
+	  height: auto;
+	  margin-bottom: 20px;
+	}
+
+    #color-picker {
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+	
+	#image-preview-container {
+	  max-width: 100%;
+	  height: auto;
+	  overflow: auto;
+	}
+
+	#image-preview {
+	  max-width: 100%;
+	  height: auto;
+	}
+
+
+    .color-format {
+      margin-bottom: 10px;
+    }
+
+    .copy-button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .copy-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Image Color Picker Tool</h1>
+    <input type="file" id="image-upload" accept="image/*" class="form-control" />
+<div id="image-preview-container" style="max-height: 400px; overflow: auto;">
+  <div id="image-preview" class="img-fluid mx-auto"></div>
+</div>
+
+
+    <div id="color-picker">
+      <div id="color-preview"></div>
+      <div class="color-format">
+        <label for="rgb-format">RGB:</label>
+        <input type="text" id="rgb-format" readonly class="form-control" />
+      </div>
+      <div class="color-format">
+        <label for="hex-format">HEX:</label>
+        <input type="text" id="hex-format" readonly class="form-control" />
+      </div>
+      <div class="color-format">
+        <label for="hsl-format">HSL:</label>
+        <input type="text" id="hsl-format" readonly class="form-control" />
+      </div>
+      <button class="copy-button btn btn-primary" id="copy-button">Copy Color</button>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+
+  <script>
+    // JavaScript code for the color picker tool
+    const imageUpload = document.getElementById('image-upload');
+    const imagePreview = document.getElementById('image-preview');
+    const colorPreview = document.getElementById('color-preview');
+    const rgbFormat = document.getElementById('rgb-format');
+    const hexFormat = document.getElementById('hex-format');
+    const hslFormat = document.getElementById('hsl-format');
+    const copyButton = document.getElementById('copy-button');
+
+    // Event listener for file upload
+    imageUpload.addEventListener('change', handleImageUpload);
+
+    // Event listener for copy button
+    copyButton.addEventListener('click', copyColorToClipboard);
+
+    // Function to handle image upload
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const img = new Image();
+        img.src = e.target.result;
+
+        img.onload = function() {
+          imagePreview.innerHTML = '';
+          imagePreview.appendChild(img);
+
+          // Enable color picking on image click
+          img.addEventListener('click', handleColorPick);
+        };
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    // Function to handle color pick
+    function handleColorPick(event) {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      const img = event.target;
+      const x = event.offsetX;
+      const y = event.offsetY;
+
+      canvas.width = img.width;
+      canvas.height = img.height;
+      context.drawImage(img, 0, 0);
+
+      const imageData = context.getImageData(x, y, 1, 1).data;
+      const rgbColor = `rgb(${imageData[0]}, ${imageData[1]}, ${imageData[2]})`;
+      const hexColor = rgbToHex(imageData[0], imageData[1], imageData[2]);
+      const hslColor = rgbToHsl(imageData[0], imageData[1], imageData[2]);
+
+      // Update color preview and formats
+      colorPreview.style.backgroundColor = rgbColor;
+      rgbFormat.value = rgbColor;
+      hexFormat.value = hexColor;
+      hslFormat.value = hslColor;
+    }
+
+    // Function to convert RGB to HEX color format
+    function rgbToHex(r, g, b) {
+      const hex = ((r << 16) | (g << 8) | b).toString(16);
+      return '#' + ('000000' + hex).slice(-6);
+    }
+
+    // Function to convert RGB to HSL color format
+    function rgbToHsl(r, g, b) {
+      r /= 255;
+      g /= 255;
+      b /= 255;
+
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+        h = s = 0; // achromatic
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+        switch (max) {
+          case r:
+            h = (g - b) / d + (g < b ? 6 : 0);
+            break;
+          case g:
+            h = (b - r) / d + 2;
+            break;
+          case b:
+            h = (r - g) / d + 4;
+            break;
+        }
+
+        h /= 6;
+      }
+
+      h = Math.round(h * 360);
+      s = Math.round(s * 100);
+      l = Math.round(l * 100);
+
+      return `hsl(${h}, ${s}%, ${l}%)`;
+    }
+
+    // Function to copy the color code to clipboard
+    function copyColorToClipboard() {
+      const selectedFormat = document.querySelector('input[name="color-format"]:checked').id;
+      let colorValue = '';
+
+      switch (selectedFormat) {
+        case 'rgb-format':
+          colorValue = rgbFormat.value;
+          break;
+        case 'hex-format':
+          colorValue = hexFormat.value;
+          break;
+        case 'hsl-format':
+          colorValue = hslFormat.value;
+          break;
+      }
+
+      navigator.clipboard.writeText(colorValue)
+        .then(() => {
+          alert('Color code copied to clipboard!');
+        })
+        .catch((error) => {
+          console.error('Failed to copy color code: ', error);
+        });
+    }
+  </script>
+</body>
+</html>
